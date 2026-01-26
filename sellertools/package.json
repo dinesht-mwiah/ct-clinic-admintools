@@ -76,8 +76,8 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "16.1.0",
     "@types/jest": "^29.5.4",
-    "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
     "@types/recharts": "^2.0.1",
     "@types/testing-library__jest-dom": "^5.14.9",
     "axios": "^1.9.0",
@@ -95,8 +95,8 @@
     "msw": "0.49.3",
     "omit-empty-es": "1.2.0",
     "prettier": "2.8.8",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-intl": "^7.1.4",
     "react-markdown": "^10.1.0",
     "react-redux": "7.2.9",
@@ -120,6 +120,5 @@
     "headers-polyfill": "3.2.5",
     "nwsapi": "2.2.7"
   },
-  "devDependencies": {},
   "packageManager": "yarn@1.22.22"
 }
