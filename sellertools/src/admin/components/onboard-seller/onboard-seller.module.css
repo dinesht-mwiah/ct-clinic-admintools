@@ -143,4 +143,52 @@
   .fullWidth {
     grid-column: span 1;
   }
+}
+
+/* Social Network Links Styles */
+.socialNetworkRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-m);
+  padding: var(--spacing-s);
+  border: 1px solid var(--color-neutral-90);
+  border-radius: var(--border-radius-6);
+  background-color: var(--color-surface);
+  margin-bottom: var(--spacing-s);
+}
+
+.socialNetworkIcon {
+  font-size: 24px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.socialNetworkLabel {
+  min-width: 100px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.socialNetworkField {
+  flex: 1;
+}
+
+.socialNetworkToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.enabledText {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.disabledText {
+  color: var(--color-neutral);
 } 

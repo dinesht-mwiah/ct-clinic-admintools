@@ -114,6 +114,10 @@ export default defineMessages({
     id: 'OnboardSeller.x',
     defaultMessage: 'X',
   },
+  tiktok: {
+    id: 'OnboardSeller.tiktok',
+    defaultMessage: 'TikTok',
+  },
   submit: {
     id: 'OnboardSeller.submit',
     defaultMessage: 'Create Clinic',

@@ -47,10 +47,17 @@ type TFormValues = {
   resellerCertificate: string;
   // Social Network Links
   facebook: string;
+  facebookEnabled: boolean;
   instagram: string;
+  instagramEnabled: boolean;
   youtube: string;
+  youtubeEnabled: boolean;
   linkedin: string;
+  linkedinEnabled: boolean;
   x: string;
+  xEnabled: boolean;
+  tiktok: string;
+  tiktokEnabled: boolean;
 };
 
 type TFieldErrors = Record<string, boolean>;
@@ -443,10 +450,17 @@ const OnboardSeller: React.FC = () => {
                 debtorNumber: '',
                 resellerCertificate: '',
                 facebook: '',
+                facebookEnabled: true,
                 instagram: '',
+                instagramEnabled: false,
                 youtube: '',
+                youtubeEnabled: true,
                 linkedin: '',
+                linkedinEnabled: false,
                 x: '',
+                xEnabled: false,
+                tiktok: '',
+                tiktokEnabled: false,
               }}
               validate={validate}
               onSubmit={handleSubmit}
@@ -780,61 +794,186 @@ const OnboardSeller: React.FC = () => {
                     {/* Social Network Links Section */}
                     <Spacings.Stack scale="m">
                       <Text.Headline as="h3">Social Network Links</Text.Headline>
-                      <TextField
-                        name="facebook"
-                        value={formikProps.values.facebook}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.facebook)}
-                        errors={formikProps.errors.facebook as unknown as TFieldErrors}
-                        touched={formikProps.touched.facebook}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
-                      <TextField
-                        name="instagram"
-                        value={formikProps.values.instagram}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.instagram)}
-                        errors={formikProps.errors.instagram as unknown as TFieldErrors}
-                        touched={formikProps.touched.instagram}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
-                      <TextField
-                        name="youtube"
-                        value={formikProps.values.youtube}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.youtube)}
-                        errors={formikProps.errors.youtube as unknown as TFieldErrors}
-                        touched={formikProps.touched.youtube}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
-                      <TextField
-                        name="linkedin"
-                        value={formikProps.values.linkedin}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.linkedin)}
-                        errors={formikProps.errors.linkedin as unknown as TFieldErrors}
-                        touched={formikProps.touched.linkedin}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
-                      <TextField
-                        name="x"
-                        value={formikProps.values.x}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.x)}
-                        errors={formikProps.errors.x as unknown as TFieldErrors}
-                        touched={formikProps.touched.x}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
+                      
+                      {/* Facebook */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>📘</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.facebook)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="facebook"
+                            value={formikProps.values.facebook}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="https://facebook.com/HappyPetsVetClinic"
+                            errors={formikProps.errors.facebook as unknown as TFieldErrors}
+                            touched={formikProps.touched.facebook}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.facebookEnabled}
+                            onChange={() => formikProps.setFieldValue('facebookEnabled', !formikProps.values.facebookEnabled)}
+                          />
+                          <span className={formikProps.values.facebookEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.facebookEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Instagram */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>📷</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.instagram)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="instagram"
+                            value={formikProps.values.instagram}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="Instagram URL"
+                            errors={formikProps.errors.instagram as unknown as TFieldErrors}
+                            touched={formikProps.touched.instagram}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.instagramEnabled}
+                            onChange={() => formikProps.setFieldValue('instagramEnabled', !formikProps.values.instagramEnabled)}
+                          />
+                          <span className={formikProps.values.instagramEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.instagramEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* YouTube */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>📺</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.youtube)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="youtube"
+                            value={formikProps.values.youtube}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="https://youtube.com/HappyPetsVetClinic"
+                            errors={formikProps.errors.youtube as unknown as TFieldErrors}
+                            touched={formikProps.touched.youtube}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.youtubeEnabled}
+                            onChange={() => formikProps.setFieldValue('youtubeEnabled', !formikProps.values.youtubeEnabled)}
+                          />
+                          <span className={formikProps.values.youtubeEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.youtubeEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* LinkedIn */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>💼</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.linkedin)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="linkedin"
+                            value={formikProps.values.linkedin}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="https://linkedin.com/HappyPetsVetClinic"
+                            errors={formikProps.errors.linkedin as unknown as TFieldErrors}
+                            touched={formikProps.touched.linkedin}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.linkedinEnabled}
+                            onChange={() => formikProps.setFieldValue('linkedinEnabled', !formikProps.values.linkedinEnabled)}
+                          />
+                          <span className={formikProps.values.linkedinEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.linkedinEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* X */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>✖️</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.x)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="x"
+                            value={formikProps.values.x}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="X URL"
+                            errors={formikProps.errors.x as unknown as TFieldErrors}
+                            touched={formikProps.touched.x}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.xEnabled}
+                            onChange={() => formikProps.setFieldValue('xEnabled', !formikProps.values.xEnabled)}
+                          />
+                          <span className={formikProps.values.xEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.xEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* TikTok */}
+                      <div className={styles.socialNetworkRow}>
+                        <div className={styles.socialNetworkIcon}>🎵</div>
+                        <div className={styles.socialNetworkLabel}>
+                          {intl.formatMessage(messages.tiktok)}
+                        </div>
+                        <div className={styles.socialNetworkField}>
+                          <TextField
+                            name="tiktok"
+                            value={formikProps.values.tiktok}
+                            onChange={formikProps.handleChange}
+                            onBlur={formikProps.handleBlur}
+                            placeholder="TikTok URL"
+                            errors={formikProps.errors.tiktok as unknown as TFieldErrors}
+                            touched={formikProps.touched.tiktok}
+                            renderError={renderError}
+                            horizontalConstraint={16}
+                          />
+                        </div>
+                        <div className={styles.socialNetworkToggle}>
+                          <CheckboxInput
+                            isChecked={formikProps.values.tiktokEnabled}
+                            onChange={() => formikProps.setFieldValue('tiktokEnabled', !formikProps.values.tiktokEnabled)}
+                          />
+                          <span className={formikProps.values.tiktokEnabled ? styles.enabledText : styles.disabledText}>
+                            {formikProps.values.tiktokEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
+                      </div>
                     </Spacings.Stack>
 
                     <div className={styles.buttonsContainer}>
