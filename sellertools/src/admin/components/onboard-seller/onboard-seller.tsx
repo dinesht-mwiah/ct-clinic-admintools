@@ -42,6 +42,7 @@ type TFormValues = {
   taxId: string;
   debtorNumber: string;
   resellerCertificate: string;
+  resellerCertificateFile?: File | null;
   // Social Network Links
   facebook: string;
   facebookEnabled: boolean;
@@ -126,6 +127,8 @@ const OnboardSeller: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
   const showNotification = useShowNotification();
+  const [uploadingFile, setUploadingFile] = React.useState(false);
+  const [resellerCertificateUrl, setResellerCertificateUrl] = React.useState<string>('');
 
   // Custom hooks for GraphQL operations
   const customerManagement = useCustomerManagement();
@@ -154,9 +157,52 @@ const OnboardSeller: React.FC = () => {
     history.goBack();
   };
 
+  const handleFileUpload = async (file: File): Promise<string> => {
+    try {
+      setUploadingFile(true);
+      
+      // TODO: Replace with your actual blob storage endpoint and authentication
+      const blobStorageUrl = 'YOUR_BLOB_STORAGE_ENDPOINT'; // e.g., 'https://youraccount.blob.core.windows.net/container'
+      const sasToken = 'YOUR_SAS_TOKEN'; // SAS token for authentication
+      
+      const fileName = `reseller-certificates/${Date.now()}-${file.name}`;
+      const uploadUrl = `${blobStorageUrl}/${fileName}?${sasToken}`;
+      
+      const response = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'x-ms-blob-type': 'BlockBlob',
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload file to blob storage');
+      }
+      
+      // Return the public URL (without SAS token for storage)
+      const publicUrl = `${blobStorageUrl}/${fileName}`;
+      return publicUrl;
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const handleSubmit = async (values: TFormValues) => {
     try {
       console.log('🚀 Starting seller onboarding process...');
+
+      // Upload reseller certificate if provided
+      let uploadedResellerUrl = '';
+      if (values.resellerCertificateFile) {
+        console.log('📤 Uploading reseller certificate...');
+        uploadedResellerUrl = await handleFileUpload(values.resellerCertificateFile);
+        console.log('✅ File uploaded:', uploadedResellerUrl);
+      }
 
       // Transform company name to key format (lowercase, spaces to dashes)
       const companyKey = values.clinicName.toLowerCase().replace(/\s+/g, '-');
@@ -327,6 +373,7 @@ const OnboardSeller: React.FC = () => {
             { name: 'youtubeEnabled', value: JSON.stringify(values.youtubeEnabled) },
             { name: 'tiktok', value: JSON.stringify(values.tiktok || '') },
             { name: 'tiktokEnabled', value: JSON.stringify(values.tiktokEnabled) },
+            { name: 'resellerUrl', value: JSON.stringify(uploadedResellerUrl || '') },
           ],
         },
       });
@@ -485,12 +532,13 @@ const OnboardSeller: React.FC = () => {
                 taxId: '',
                 debtorNumber: '',
                 resellerCertificate: '',
+                resellerCertificateFile: null,
                 facebook: '',
-                facebookEnabled: true,
+                facebookEnabled: false,
                 instagram: '',
                 instagramEnabled: false,
                 youtube: '',
-                youtubeEnabled: true,
+                youtubeEnabled: false,
                 linkedin: '',
                 linkedinEnabled: false,
                 x: '',
@@ -786,17 +834,35 @@ const OnboardSeller: React.FC = () => {
                         renderError={renderError}
                         horizontalConstraint={16}
                       />
-                      <TextField
-                        name="resellerCertificate"
-                        value={formikProps.values.resellerCertificate}
-                        onChange={formikProps.handleChange}
-                        onBlur={formikProps.handleBlur}
-                        title={intl.formatMessage(messages.resellerCertificate)}
-                        errors={formikProps.errors.resellerCertificate as unknown as TFieldErrors}
-                        touched={formikProps.touched.resellerCertificate}
-                        renderError={renderError}
-                        horizontalConstraint={16}
-                      />
+                      <div>
+                        <Text.Body isBold>
+                          {intl.formatMessage(messages.resellerCertificate)}
+                        </Text.Body>
+                        <Spacings.Stack scale="xs">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                formikProps.setFieldValue('resellerCertificateFile', file);
+                                formikProps.setFieldValue('resellerCertificate', file.name);
+                              }
+                            }}
+                            style={{
+                              padding: '8px',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                              width: '100%',
+                            }}
+                          />
+                          {formikProps.values.resellerCertificate && (
+                            <Text.Detail>
+                              Selected: {formikProps.values.resellerCertificate}
+                            </Text.Detail>
+                          )}
+                        </Spacings.Stack>
+                      </div>
                     </Spacings.Stack>
 
                     {/* Social Network Links Section */}
@@ -986,9 +1052,9 @@ const OnboardSeller: React.FC = () => {
 
                     <div className={styles.buttonsContainer}>
                       <PrimaryButton
-                        label={intl.formatMessage(messages.submit)}
+                        label={uploadingFile ? 'Uploading file...' : intl.formatMessage(messages.submit)}
                         type="submit"
-                        isDisabled={formikProps.isSubmitting || isLoading}
+                        isDisabled={formikProps.isSubmitting || isLoading || uploadingFile}
                         size="20"
                       />
                     </div>
