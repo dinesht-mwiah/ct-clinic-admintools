@@ -32,15 +32,12 @@ type TFormValues = {
   primaryContactName: string;
   primaryContactEmail: string;
   primaryPhoneNumber: string;
-  primaryPhoneSms: boolean;
   secondaryContactName: string;
   secondaryContactEmail: string;
   secondaryPhoneNumber: string;
-  secondaryPhoneSms: boolean;
   prescriptionEmail: string;
   faxNumber: string;
   billingPhoneNumber: string;
-  billingPhoneSms: boolean;
   // Billing Info
   taxId: string;
   debtorNumber: string;
@@ -162,11 +159,11 @@ const OnboardSeller: React.FC = () => {
       console.log('🚀 Starting seller onboarding process...');
 
       // Transform company name to key format (lowercase, spaces to dashes)
-      const companyKey = values.companyName.toLowerCase().replace(/\s+/g, '-');
-      const companyName = values.companyName; // Keep original for display
+      const companyKey = values.clinicName.toLowerCase().replace(/\s+/g, '-');
+      const companyName = values.clinicName; // Keep original for display
 
       console.log(
-        `📝 Onboarding: ${companyName} (${values.firstName} ${values.lastName})`
+        `📝 Onboarding: ${companyName} (Clinic: ${values.primaryContactName})`
       );
 
       // Step 1: Create the customer with ExternalAuth and customer group
@@ -174,9 +171,9 @@ const OnboardSeller: React.FC = () => {
       const customerGroupKey = environment?.CUSTOMER_GROUP;
 
       const customer = await customerManagement.createCustomer({
-        email: values.email,
-        firstName: values.firstName,
-        lastName: values.lastName,
+        email: values.primaryContactEmail,
+        firstName: values.primaryContactName.split(' ')[0] || values.primaryContactName,
+        lastName: values.primaryContactName.split(' ').slice(1).join(' ') || '',
         companyName: companyName,
         authenticationMode: 'Password',
         password: 'welcome',
@@ -255,29 +252,27 @@ const OnboardSeller: React.FC = () => {
 
       // Step 4: Create business unit with associate and store references
       console.log('🏢 Step 4: Creating business unit...');
-      const associateRoleKey = environment?.ASSOCIATE_ROLE;
-
-      if (!associateRoleKey) {
-        throw new Error('ASSOCIATE_ROLE environment variable is not set');
-      }
+      const associateRoleKey = environment?.ASSOCIATE_ROLE || 'admin';
 
       const businessUnit = await businessUnitManagement.createBusinessUnit({
         key: companyKey,
         name: companyName,
         unitType: 'Company',
-        contactEmail: values.email,
-        addresses: values.phoneNumber
-          ? [
-              {
-                key: `${companyKey}-address`,
-                country: 'US',
-                firstName: values.firstName,
-                lastName: values.lastName,
-                company: companyName,
-                phone: values.phoneNumber,
-              },
-            ]
-          : undefined,
+        contactEmail: values.primaryContactEmail || '',
+        addresses: [
+          {
+            key: `${companyKey}-address`,
+            country: 'US',
+            firstName: values.primaryContactName,
+            lastName: '',
+            company: companyName,
+            phone: values.primaryPhoneNumber,
+            streetName: values.address,
+            city: values.city,
+            postalCode: values.zipCode,
+            state: values.state,
+          },
+        ],
         associates: [
           {
             customer: {
@@ -301,9 +296,53 @@ const OnboardSeller: React.FC = () => {
           },
         ],
         storeMode: 'Explicit',
+        custom: {
+          type: {
+            typeId: 'type',
+            key: 'mwi-businessunit-attributes',
+          },
+          fields: [
+            { name: 'websiteUrl', value: JSON.stringify(values.websiteUrl || '') },
+            { name: 'practiceType', value: JSON.stringify(values.practiceType || '') },
+            { name: 'primaryContactName', value: JSON.stringify(values.primaryContactName || '') },
+            { name: 'primaryContactEmail', value: JSON.stringify(values.primaryContactEmail || '') },
+            { name: 'primaryContactPhone', value: JSON.stringify(values.primaryPhoneNumber || '') },
+            { name: 'secondaryContactName', value: JSON.stringify(values.secondaryContactName || '') },
+            { name: 'secondaryContactEmail', value: JSON.stringify(values.secondaryContactEmail || '') },
+            { name: 'secondaryContactPhone', value: JSON.stringify(values.secondaryPhoneNumber || '') },
+            { name: 'billingPhone', value: JSON.stringify(values.billingPhoneNumber || '') },
+            { name: 'taxId', value: JSON.stringify(values.taxId || '') },
+            { name: 'debtorNumber', value: JSON.stringify(values.debtorNumber || '') },
+            { name: 'fax', value: JSON.stringify(values.faxNumber || '') },
+            { name: 'prescriptionEmail', value: JSON.stringify(values.prescriptionEmail || '') },
+            { name: 'fb', value: JSON.stringify(values.facebook || '') },
+            { name: 'fbEnabled', value: JSON.stringify(values.facebookEnabled) },
+            { name: 'instagram', value: JSON.stringify(values.instagram || '') },
+            { name: 'instaEnabled', value: JSON.stringify(values.instagramEnabled) },
+            { name: 'xUrl', value: JSON.stringify(values.x || '') },
+            { name: 'xEnabled', value: JSON.stringify(values.xEnabled) },
+            { name: 'in', value: JSON.stringify(values.linkedin || '') },
+            { name: 'inEnabled', value: JSON.stringify(values.linkedinEnabled) },
+            { name: 'youtube', value: JSON.stringify(values.youtube || '') },
+            { name: 'youtubeEnabled', value: JSON.stringify(values.youtubeEnabled) },
+            { name: 'tiktok', value: JSON.stringify(values.tiktok || '') },
+            { name: 'tiktokEnabled', value: JSON.stringify(values.tiktokEnabled) },
+          ],
+        },
       });
 
       if (!businessUnit) {
+        // Check if there's an error from the hook
+        if (businessUnitManagement.error) {
+          console.error('❌ Business unit creation failed with error:', {
+            message: businessUnitManagement.error.message,
+            graphQLErrors: businessUnitManagement.error.graphQLErrors,
+            networkError: businessUnitManagement.error.networkError,
+          });
+          throw new Error(
+            `Failed to create business unit: ${businessUnitManagement.error.message}`
+          );
+        }
         throw new Error('Failed to create business unit');
       }
 
@@ -313,7 +352,7 @@ const OnboardSeller: React.FC = () => {
       console.log('📨 Step 5: Creating Merchant Center invitation...');
       const invitationSuccess =
         await merchantCenterManagement.inviteSellerToMerchantCenter(
-          values.email
+          values.primaryContactEmail
         );
 
       if (invitationSuccess) {
@@ -363,7 +402,7 @@ const OnboardSeller: React.FC = () => {
             id: 'OnboardSeller.success',
             defaultMessage: 'Seller {name} has been successfully onboarded!',
           },
-          { name: `${values.firstName} ${values.lastName}` }
+          { name: values.primaryContactName }
         ),
       });
 
@@ -437,15 +476,12 @@ const OnboardSeller: React.FC = () => {
                 primaryContactName: '',
                 primaryContactEmail: '',
                 primaryPhoneNumber: '',
-                primaryPhoneSms: false,
                 secondaryContactName: '',
                 secondaryContactEmail: '',
                 secondaryPhoneNumber: '',
-                secondaryPhoneSms: false,
                 prescriptionEmail: '',
                 faxNumber: '',
                 billingPhoneNumber: '',
-                billingPhoneSms: false,
                 taxId: '',
                 debtorNumber: '',
                 resellerCertificate: '',
@@ -506,10 +542,12 @@ const OnboardSeller: React.FC = () => {
                           renderError={renderError}
                           horizontalConstraint={16}
                           options={[
-                            { value: 'small-animal', label: 'Small Animal' },
-                            { value: 'large-animal', label: 'Large Animal' },
-                            { value: 'mixed', label: 'Mixed' },
-                            { value: 'exotic', label: 'Exotic' },
+                            { value: 'Small Animal', label: 'Small Animal' },
+                            { value: 'Large Animal', label: 'Large Animal' },
+                            { value: 'Canine', label: 'Canine' },
+                            { value: 'Feline', label: 'Feline' },
+                            { value: 'Equine', label: 'Equine' },
+                            { value: 'All', label: 'All' },
                           ]}
                         />
                       </div>
@@ -639,27 +677,17 @@ const OnboardSeller: React.FC = () => {
                           renderError={renderError}
                           horizontalConstraint={16}
                         />
-                        <div className={styles.phoneFieldWithSms}>
-                          <TextField
-                            name="primaryPhoneNumber"
-                            value={formikProps.values.primaryPhoneNumber}
-                            onChange={formikProps.handleChange}
-                            onBlur={formikProps.handleBlur}
-                            title={intl.formatMessage(messages.primaryPhoneNumber)}
-                            errors={formikProps.errors.primaryPhoneNumber as unknown as TFieldErrors}
-                            touched={formikProps.touched.primaryPhoneNumber}
-                            renderError={renderError}
-                            horizontalConstraint={16}
-                          />
-                          <div className={styles.smsCheckbox}>
-                            <CheckboxInput
-                              isChecked={formikProps.values.primaryPhoneSms}
-                              onChange={(e) => formikProps.setFieldValue('primaryPhoneSms', e.target.checked)}
-                            >
-                              Enable SMS
-                            </CheckboxInput>
-                          </div>
-                        </div>
+                        <TextField
+                          name="primaryPhoneNumber"
+                          value={formikProps.values.primaryPhoneNumber}
+                          onChange={formikProps.handleChange}
+                          onBlur={formikProps.handleBlur}
+                          title={intl.formatMessage(messages.primaryPhoneNumber)}
+                          errors={formikProps.errors.primaryPhoneNumber as unknown as TFieldErrors}
+                          touched={formikProps.touched.primaryPhoneNumber}
+                          renderError={renderError}
+                          horizontalConstraint={16}
+                        />
                       </div>
                       <div className={styles.formRowThreeColumns}>
                         <TextField
@@ -684,27 +712,17 @@ const OnboardSeller: React.FC = () => {
                           renderError={renderError}
                           horizontalConstraint={16}
                         />
-                        <div className={styles.phoneFieldWithSms}>
-                          <TextField
-                            name="secondaryPhoneNumber"
-                            value={formikProps.values.secondaryPhoneNumber}
-                            onChange={formikProps.handleChange}
-                            onBlur={formikProps.handleBlur}
-                            title={intl.formatMessage(messages.secondaryPhoneNumber)}
-                            errors={formikProps.errors.secondaryPhoneNumber as unknown as TFieldErrors}
-                            touched={formikProps.touched.secondaryPhoneNumber}
-                            renderError={renderError}
-                            horizontalConstraint={16}
-                          />
-                          <div className={styles.smsCheckbox}>
-                            <CheckboxInput
-                              isChecked={formikProps.values.secondaryPhoneSms}
-                              onChange={(e) => formikProps.setFieldValue('secondaryPhoneSms', e.target.checked)}
-                            >
-                              Enable SMS
-                            </CheckboxInput>
-                          </div>
-                        </div>
+                        <TextField
+                          name="secondaryPhoneNumber"
+                          value={formikProps.values.secondaryPhoneNumber}
+                          onChange={formikProps.handleChange}
+                          onBlur={formikProps.handleBlur}
+                          title={intl.formatMessage(messages.secondaryPhoneNumber)}
+                          errors={formikProps.errors.secondaryPhoneNumber as unknown as TFieldErrors}
+                          touched={formikProps.touched.secondaryPhoneNumber}
+                          renderError={renderError}
+                          horizontalConstraint={16}
+                        />
                       </div>
                       <div className={styles.formRowThreeColumns}>
                         <TextField
@@ -729,27 +747,17 @@ const OnboardSeller: React.FC = () => {
                           renderError={renderError}
                           horizontalConstraint={16}
                         />
-                        <div className={styles.phoneFieldWithSms}>
-                          <TextField
-                            name="billingPhoneNumber"
-                            value={formikProps.values.billingPhoneNumber}
-                            onChange={formikProps.handleChange}
-                            onBlur={formikProps.handleBlur}
-                            title={intl.formatMessage(messages.billingPhoneNumber)}
-                            errors={formikProps.errors.billingPhoneNumber as unknown as TFieldErrors}
-                            touched={formikProps.touched.billingPhoneNumber}
-                            renderError={renderError}
-                            horizontalConstraint={16}
-                          />
-                          <div className={styles.smsCheckbox}>
-                            <CheckboxInput
-                              isChecked={formikProps.values.billingPhoneSms}
-                              onChange={(e) => formikProps.setFieldValue('billingPhoneSms', e.target.checked)}
-                            >
-                              Enable SMS
-                            </CheckboxInput>
-                          </div>
-                        </div>
+                        <TextField
+                          name="billingPhoneNumber"
+                          value={formikProps.values.billingPhoneNumber}
+                          onChange={formikProps.handleChange}
+                          onBlur={formikProps.handleBlur}
+                          title={intl.formatMessage(messages.billingPhoneNumber)}
+                          errors={formikProps.errors.billingPhoneNumber as unknown as TFieldErrors}
+                          touched={formikProps.touched.billingPhoneNumber}
+                          renderError={renderError}
+                          horizontalConstraint={16}
+                        />
                       </div>
                     </Spacings.Stack>
 

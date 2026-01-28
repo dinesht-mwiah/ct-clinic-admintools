@@ -48,6 +48,12 @@ const CREATE_BUSINESS_UNIT = gql`
         key
         name(locale: "en-US")
       }
+      custom {
+        customFieldsRaw {
+          name
+          value
+        }
+      }
     }
   }
 `;
@@ -92,6 +98,16 @@ export interface BusinessUnitDraft {
     key: string;
   }>;
   storeMode?: 'Explicit' | 'FromParent';
+  custom?: {
+    type: {
+      typeId: 'type';
+      key: string;
+    };
+    fields: Array<{
+      name: string;
+      value: any;
+    }>;
+  };
 }
 
 export interface BusinessUnit {
@@ -168,13 +184,23 @@ export const useBusinessUnitManagement = (): UseBusinessUnitManagement => {
         setLoading(true);
         setError(null);
 
+        console.log('🔍 Creating business unit with draft:', JSON.stringify(draft, null, 2));
+
         const { data } = await createBusinessUnitMutation({
           variables: { draft },
         });
 
+        console.log('✅ Business unit mutation response:', JSON.stringify(data, null, 2));
+
         return (data as any)?.createBusinessUnit || null;
       } catch (err) {
         const apolloError = err as ApolloError;
+        console.error('❌ Business unit creation error:', {
+          message: apolloError.message,
+          graphQLErrors: apolloError.graphQLErrors,
+          networkError: apolloError.networkError,
+          extraInfo: apolloError.extraInfo,
+        });
         setError(apolloError);
         return null;
       } finally {
